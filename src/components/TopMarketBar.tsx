@@ -1,4 +1,4 @@
-import { TrendingUp, TrendingDown, Clock, Activity } from "lucide-react";
+import { Clock, Activity } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatPrice, formatPercent, formatMarketCap } from "@/lib/api";
 import type { MarketSummary } from "@/types/market";

@@ -1,17 +1,15 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import {
   X,
   TrendingUp,
   TrendingDown,
   Star,
   StarOff,
-  ExternalLink,
   Shield,
   AlertTriangle,
   Zap,
   BarChart3,
   Clock,
-  Globe,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -21,7 +19,6 @@ import {
   formatVolume,
   fetchCoinDetail,
   fetchMarketChart,
-  clearCache,
 } from "@/lib/api";
 import type { CoinData, CoinDetail, MarketChartData, RiskAssessment, RiskLabel } from "@/types/market";
 

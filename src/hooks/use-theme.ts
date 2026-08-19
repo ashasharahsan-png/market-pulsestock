@@ -4,18 +4,13 @@ type Theme = "dark" | "light";
 
 const STORAGE_KEY = "nexus-theme";
 
-function getSystemTheme(): Theme {
-  if (typeof window === "undefined") return "dark";
-  return window.matchMedia("(prefers-color-scheme: dark)").matches
-    ? "dark"
-    : "light";
-}
-
 function getStoredTheme(): Theme | null {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored === "dark" || stored === "light") return stored;
-  } catch {}
+  } catch {
+    // localStorage not available
+  }
   return null;
 }
 
@@ -30,7 +25,9 @@ export function useTheme() {
     root.classList.add(theme);
     try {
       localStorage.setItem(STORAGE_KEY, theme);
-    } catch {}
+    } catch {
+      // localStorage not available
+    }
   }, [theme]);
 
   // Listen for system preference changes

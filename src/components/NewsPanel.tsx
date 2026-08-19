@@ -35,7 +35,7 @@ const SENTIMENT_COLORS: Record<string, string> = {
   neutral: "bg-muted text-muted-foreground",
 };
 
-export function NewsPanel({ trending, isLoading }: NewsPanelProps) {
+export function NewsPanel({ trending }: NewsPanelProps) {
   const [news, setNews] = useState<NewsItem[]>([]);
   const [loadingNews, setLoadingNews] = useState(true);
   const [activeCategory, setActiveCategory] = useState<string>("all");

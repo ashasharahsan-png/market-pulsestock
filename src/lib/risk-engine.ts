@@ -21,7 +21,6 @@
 
 import type {
   CoinData,
-  CoinDetail,
   RiskAssessment,
   ScoreFactors,
   RiskLabel,
@@ -187,7 +186,7 @@ function scoreNewsSentiment(_coin: CoinData, _sentiment?: number): number {
  */
 function scoreMacroRisk(marketCapChange24h: number): number {
   // Positive market movement = lower macro risk
-  let score = 50 + marketCapChange24h * 5;
+  const score = 50 + marketCapChange24h * 5;
   return Math.max(10, Math.min(90, score));
 }
 
@@ -429,7 +428,6 @@ function generateReasons(
 function generateOutlookTexts(
   factors: ScoreFactors,
   riskLabel: RiskLabel,
-  outlookScore: number,
 ): {
   shortTerm: string;
   mediumTerm: string;
@@ -437,8 +435,6 @@ function generateOutlookTexts(
   downside: string;
 } {
   const isHighMomentum = factors.momentum > 65;
-  const isHighVol = factors.volatility < 40;
-  const isLiquid = factors.liquidity > 60;
 
   let shortTerm: string;
   let mediumTerm: string;
@@ -473,26 +469,6 @@ function generateOutlookTexts(
   return { shortTerm, mediumTerm, upside, downside };
 }
 
-function generateRiskExplanation(
-  riskLabel: RiskLabel,
-  coin: CoinData,
-  factors: ScoreFactors,
-): string {
-  const name = coin.name;
-
-  switch (riskLabel) {
-    case "Safer":
-      return `${name} shows relatively stronger liquidity, established market structure, and lower extreme volatility — more resilient under current market conditions.`;
-    case "Riskier but High Potential":
-      return `${name} shows strong short-term momentum and market attention, but volatility and uncertainty remain elevated. Upside exists if conditions hold, but risk of sharp pullbacks is real.`;
-    case "Riskier":
-      return `${name} has elevated volatility, uncertain trend strength, or weaker liquidity. Requires caution and position sizing discipline.`;
-    case "Do Not Invest":
-      return `${name} shows severe warning signals including very low liquidity, structural instability, or unfavorable risk-reward. Not recommended for new positions.`;
-    default:
-      return `Unable to provide assessment for ${name} due to insufficient data.`;
-  }
-}
 
 // ---------------------------------------------------------------------------
 // Main Assessment Function
@@ -512,7 +488,7 @@ export function assessRisk(
   const bullishCase = generateBullishCase(coin, factors, outlookScore);
   const bearishCase = generateBearishCase(coin, factors);
   const reasons = generateReasons(coin, factors, riskLabel);
-  const outlookTexts = generateOutlookTexts(factors, riskLabel, outlookScore);
+  const outlookTexts = generateOutlookTexts(factors, riskLabel);
 
   return {
     coinId: coin.id,

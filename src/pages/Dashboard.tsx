@@ -15,7 +15,7 @@ import { TrendingUp, TrendingDown, Activity, ShieldAlert, Star } from "lucide-re
 import { formatPrice, formatPercent, formatMarketCap } from "@/lib/api";
 
 export default function Dashboard() {
-  const { theme, toggleTheme, isDark } = useTheme();
+  const { toggleTheme, isDark } = useTheme();
   const [activeSection, setActiveSection] = useState<SidebarSection>("overview");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [selectedCoinId, setSelectedCoinId] = useState<string | null>(null);

@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
-import { ShieldAlert, ChevronDown, ChevronUp, TrendingUp, TrendingDown, AlertTriangle, Shield, Zap } from "lucide-react";
+import { ShieldAlert, ChevronDown, ChevronUp, TrendingDown, AlertTriangle, Shield, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { formatPercent } from "@/lib/api";
+import "@/lib/api";
 import type { RiskAssessment, RiskLabel } from "@/types/market";
 
 interface RiskOpportunityProps {

@@ -12,7 +12,7 @@ import {
   Info,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { formatPrice, formatPercent, formatMarketCap } from "@/lib/api";
+import { formatPrice, formatPercent } from "@/lib/api";
 import type { CoinData, PortfolioCalculation } from "@/types/market";
 
 interface PortfolioTrackerProps {

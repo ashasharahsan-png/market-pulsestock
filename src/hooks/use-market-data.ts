@@ -127,7 +127,7 @@ export function useMarketData() {
         error: coins.status === "rejected" ? "Failed to load some market data" : null,
         lastUpdated: new Date(),
       });
-    } catch (err) {
+    } catch {
       if (!mountedRef.current) return;
       setState((prev) => ({
         ...prev,

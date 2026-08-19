@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import {
   ArrowUpDown,
   ArrowUp,
@@ -19,7 +19,6 @@ import type {
   FilterMarketCap,
   FilterTrend,
   FilterRisk,
-  WatchlistItem,
 } from "@/types/market";
 
 interface CryptoMarketBoardProps {
@@ -188,7 +187,7 @@ export function CryptoMarketBoard({
             </tr>
           </thead>
           <tbody>
-            {coins.map((coin, idx) => {
+            {coins.map((coin) => {
               const risk = riskMap.get(coin.id);
               const isWatched = watchlistIds.has(coin.id);
               const change1h = coin.price_change_percentage_1h_in_currency;
