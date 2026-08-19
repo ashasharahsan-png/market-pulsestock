@@ -15,6 +15,16 @@ import type {
   MarketChartData,
   TrendingCoin,
 } from "@/types/market";
+import {
+  FALLBACK_COINS,
+  FALLBACK_GLOBAL_DATA,
+  FALLBACK_FEAR_GREED,
+  FALLBACK_TRENDING,
+} from "@/lib/fallback-data";
+
+// Flag set after first real API success so we can distinguish "never loaded"
+// from "API failed" and show fallback gracefully.
+let hasSuccessfullyFetched = false;
 
 // ---------------------------------------------------------------------------
 // Configuration
@@ -85,6 +95,7 @@ async function cachedFetch<T>(
   try {
     const data = await throttledFetch<T>(url, group);
     setCache(cacheKey, data);
+    hasSuccessfullyFetched = true;
     return data;
   } catch (err) {
     // Serve stale data if available
@@ -107,7 +118,15 @@ export async function fetchTopCoins(
   page = 1,
 ): Promise<CoinData[]> {
   const url = `${BASE_URL}/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=${perPage}&page=${page}&sparkline=true&price_change_percentage=1h%2C24h%2C7d%2C30d`;
-  return cachedFetch<CoinData[]>(url, `top-coins-${perPage}-${page}`, "coins");
+  try {
+    return await cachedFetch<CoinData[]>(url, `top-coins-${perPage}-${page}`, "coins");
+  } catch (error) {
+    if (!hasSuccessfullyFetched) {
+      console.warn("[Nexus] CoinGecko API unreachable — using fallback market data");
+      return FALLBACK_COINS.slice(0, perPage);
+    }
+    throw error;
+  }
 }
 
 /**
@@ -115,8 +134,13 @@ export async function fetchTopCoins(
  */
 export async function fetchGlobalData(): Promise<GlobalData> {
   const url = `${BASE_URL}/global`;
-  const res = await cachedFetch<{ data: GlobalData }>(url, "global", "global");
-  return res.data;
+  try {
+    const res = await cachedFetch<{ data: GlobalData }>(url, "global", "global");
+    return res.data;
+  } catch (error) {
+    if (!hasSuccessfullyFetched) return FALLBACK_GLOBAL_DATA;
+    throw error;
+  }
 }
 
 /**
@@ -124,12 +148,17 @@ export async function fetchGlobalData(): Promise<GlobalData> {
  */
 export async function fetchTrendingCoins(): Promise<TrendingCoin[]> {
   const url = `${BASE_URL}/search/trending`;
-  const res = await cachedFetch<{ coins: TrendingCoin[] }>(
-    url,
-    "trending",
-    "trending",
-  );
-  return res.coins;
+  try {
+    const res = await cachedFetch<{ coins: TrendingCoin[] }>(
+      url,
+      "trending",
+      "trending",
+    );
+    return res.coins;
+  } catch (error) {
+    if (!hasSuccessfullyFetched) return FALLBACK_TRENDING;
+    throw error;
+  }
 }
 
 /**
@@ -184,7 +213,7 @@ export async function searchCoins(
 // ---------------------------------------------------------------------------
 
 export interface FearGreedData {
-  value: number;
+  value: number | string;
   value_classification: string;
 }
 
@@ -197,6 +226,7 @@ export async function fetchFearGreedIndex(): Promise<FearGreedData | null> {
     );
     return res.data?.[0] || null;
   } catch {
+    if (!hasSuccessfullyFetched) return FALLBACK_FEAR_GREED;
     return null;
   }
 }
