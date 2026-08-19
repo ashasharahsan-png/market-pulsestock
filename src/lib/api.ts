@@ -232,34 +232,53 @@ export async function fetchFearGreedIndex(): Promise<FearGreedData | null> {
 }
 
 // ---------------------------------------------------------------------------
-// News (CryptoPanic free API — no key required for basic access)
+// News (RSS feeds via rss2json — CORS-friendly, no key required)
 // ---------------------------------------------------------------------------
 
-export interface CryptoPanicPost {
+export interface RssNewsItem {
   id: string;
   title: string;
-  body: string | null;
+  description: string;
+  source: string;
   url: string;
-  source: { title: string };
-  published_at: string;
-  votes: { positive: number; negative: number; important: number; liked: number };
-  currencies?: { code: string }[];
-  sentiment?: string;
+  publishedAt: string;
+  category: string;
+  sentiment: "positive" | "negative" | "neutral";
 }
 
-export async function fetchCryptoNews(): Promise<CryptoPanicPost[]> {
-  try {
-    const url = "https://cryptopanic.com/api/free/v1/posts/?auth_token=&public=true&kind=news&filter=important";
-    const res = await cachedFetch<{ results: CryptoPanicPost[] }>(
-      url,
-      "news",
-      "news",
-    );
-    return res.results || [];
-  } catch {
-    // Fallback: try fetching from CoinGecko trending for news context
-    return [];
-  }
+const RSS2JSON_BASE = "https://api.rss2json.com/v1/api.json?rss_url=";
+
+const NEWS_FEEDS = [
+  { name: "BBC Business", url: "https://feeds.bbci.co.uk/news/business/rss.xml" },
+  { name: "Reuters", url: "https://www.reutersagency.com/feed/?taxonomy=best-sectors&post_type=best" },
+  { name: "Al Jazeera", url: "https://www.aljazeera.com/xml/rss/all.xml" },
+  { name: "CoinDesk", url: "https://www.coindesk.com/arc/outboundfeeds/rss/" },
+];
+
+export async function fetchNewsFeeds(): Promise<RssNewsItem[]> {
+  const results = await Promise.allSettled(
+    NEWS_FEEDS.map(async (feed) => {
+      const res = await fetch(`${RSS2JSON_BASE}${encodeURIComponent(feed.url)}`);
+      if (!res.ok) return [];
+      const data = await res.json();
+      return (data.items || []).map((item: Record<string, string>) => ({
+        id: item.guid || item.link || `${feed.name}-${Math.random().toString(36).slice(2)}`,
+        title: item.title || "",
+        description: (item.description || "").replace(/<[^>]+>/g, "").slice(0, 200),
+        source: feed.name,
+        url: item.link || "#",
+        publishedAt: item.pubDate || new Date().toISOString(),
+        category: "general",
+        sentiment: "neutral" as const,
+      }));
+    }),
+  );
+
+  return results
+    .filter((r): r is PromiseFulfilledResult<RssNewsItem[]> => r.status === "fulfilled")
+    .flatMap((r) => r.value)
+    .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
+    .slice(0, 50);
 }
 
 // ---------------------------------------------------------------------------
