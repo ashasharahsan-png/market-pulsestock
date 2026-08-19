@@ -73,18 +73,22 @@ function scoreMomentum(coin: CoinData): number {
 }
 
 /**
- * Volume Trend: Compare current volume to market cap ratio.
- * Higher relative volume = more active market = better liquidity signal.
+ * Volume Trend: Absolute trading volume as a market activity signal.
+ * Larger absolute volume = deeper markets, more participants, better signal.
  */
 function scoreVolumeTrend(coin: CoinData): number {
-  if (!coin.market_cap || coin.market_cap === 0) return 20;
-  const volumeRatio = coin.total_volume / coin.market_cap;
-
-  // Typical range: 0.01 (low) to 0.3+ (high)
-  // Higher volume relative to market cap means active trading
-  let score = volumeRatio * 200; // 0.05 → 10, 0.15 → 30, 0.5 → 100
-  score = Math.max(0, Math.min(100, score));
-  return score;
+  const vol = coin.total_volume;
+  // Score based on absolute volume tiers (more useful than ratio for large caps)
+  if (vol > 10_000_000_000) return 95;  // >$10B — massive activity
+  if (vol > 5_000_000_000) return 85;   // >$5B
+  if (vol > 1_000_000_000) return 75;   // >$1B
+  if (vol > 500_000_000) return 65;     // >$500M
+  if (vol > 200_000_000) return 55;     // >$200M
+  if (vol > 100_000_000) return 45;     // >$100M
+  if (vol > 50_000_000) return 35;      // >$50M
+  if (vol > 10_000_000) return 25;      // >$10M
+  if (vol > 1_000_000) return 15;       // >$1M
+  return 5;
 }
 
 /**
@@ -118,21 +122,23 @@ function scoreLiquidity(coin: CoinData): number {
   const volume = coin.total_volume;
   const mcap = coin.market_cap;
 
-  // Volume-based score
+  // Volume-based score — generous tiers so large caps score well
   let volScore = 0;
-  if (volume > 1_000_000_000) volScore = 90;
-  else if (volume > 500_000_000) volScore = 80;
-  else if (volume > 100_000_000) volScore = 65;
-  else if (volume > 50_000_000) volScore = 50;
-  else if (volume > 10_000_000) volScore = 35;
-  else if (volume > 1_000_000) volScore = 20;
+  if (volume > 10_000_000_000) volScore = 95;   // >$10B
+  else if (volume > 5_000_000_000) volScore = 90;
+  else if (volume > 1_000_000_000) volScore = 80;
+  else if (volume > 500_000_000) volScore = 70;
+  else if (volume > 100_000_000) volScore = 55;
+  else if (volume > 50_000_000) volScore = 40;
+  else if (volume > 10_000_000) volScore = 25;
+  else if (volume > 1_000_000) volScore = 15;
   else volScore = 5;
 
-  // Market cap modifier
+  // Market cap modifier — larger mcap = structurally more liquid
   let mcapBonus = 0;
-  if (mcap > 100_000_000_000) mcapBonus = 10;
-  else if (mcap > 10_000_000_000) mcapBonus = 7;
-  else if (mcap > 1_000_000_000) mcapBonus = 4;
+  if (mcap > 100_000_000_000) mcapBonus = 5;
+  else if (mcap > 10_000_000_000) mcapBonus = 3;
+  else if (mcap > 1_000_000_000) mcapBonus = 1;
   else if (mcap > 100_000_000) mcapBonus = 0;
   else mcapBonus = -5;
 
@@ -312,31 +318,31 @@ function assignRiskLabel(
     return "Do Not Invest";
   }
 
-  // Safer: strong fundamentals across the board
+  // Safer: strong fundamentals — lower thresholds so top coins qualify
   if (
-    outlookScore >= 68 &&
-    factors.liquidity >= 60 &&
-    factors.marketCapMaturity >= 60 &&
-    factors.volatility >= 50
+    outlookScore >= 58 &&
+    factors.liquidity >= 50 &&
+    factors.marketCapMaturity >= 50 &&
+    factors.volatility >= 40
   ) {
     return "Safer";
   }
 
-  // Riskier but High Potential: high volatility but strong momentum/catalysts
+  // Riskier but High Potential: strong momentum and attention, elevated volatility
   if (
-    factors.momentum >= 65 &&
-    factors.volumeTrend >= 50 &&
-    factors.volatility < 50 &&
-    factors.liquidity >= 35
+    factors.momentum >= 55 &&
+    factors.volumeTrend >= 30 &&
+    factors.liquidity >= 30 &&
+    factors.volatility < 60
   ) {
     return "Riskier but High Potential";
   }
 
   // Default: Riskier
-  if (outlookScore >= 35) return "Riskier";
+  if (outlookScore >= 30) return "Riskier";
 
-  // Very low scores → still Riskier but might be Do Not Invest
-  return outlookScore < 25 ? "Do Not Invest" : "Riskier";
+  // Very low scores → Do Not Invest
+  return outlookScore < 20 ? "Do Not Invest" : "Riskier";
 }
 
 // ---------------------------------------------------------------------------
